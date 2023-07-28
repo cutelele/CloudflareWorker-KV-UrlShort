@@ -9,7 +9,7 @@ const URL_NAME = "shortCode";
 // 短链接键名（用于 API 返回）
 const SHORT_URL_KEY = "shorturl";
 // 静态首页源码链接 （设置首页替换页面，不需要也可以直接注释掉）
-// const STATICHTML = "https://raw.githubusercontent.com/Aiayw/CloudflareWorkerKV-UrlShort/main/404.html";
+const STATICHTML = "https://raw.githubusercontent.com/Aiayw/CloudflareWorkerKV-UrlShort/main/404.html";
 
 
 const index = `<!doctype html>
@@ -158,8 +158,7 @@ const index = `<!doctype html>
     
     <footer class="footer">
         <div class="container">
-        <a href="https://www.cloudflare.com/" class="text-muted">基于Cloudflare-WorkerKV的</a>
-        <a href="https://github.com/Aiayw/CloudflareWorkerKV-UrlShort" class="text-muted">开源项目，请自行部署体验</a>
+        <a class="text-muted">v1.ax</a>
         </div>
     </footer>
 
@@ -280,7 +279,7 @@ if (pathname.startsWith(API_PATH)) {
     if (
       body[URL_NAME] == undefined ||
       body[URL_NAME] == "" ||
-      body[URL_NAME].length < 2
+      body[URL_NAME].length < 1
     ) {
       body[URL_NAME] = Math.random().toString(36).slice(-6);
     }
@@ -296,7 +295,9 @@ if (pathname.startsWith(API_PATH)) {
     }
     
     const expiration = parseInt(body["expiration"]);
-    let expiresAt = null;
+    const now = new Date();
+    const thisTime = now.getTime();
+    let expiresAt = expiration===-1?new Date(thisTime + (5259600 * 60 * 1000)):new Date(thisTime + (expiration * 60 * 1000));
     await shortlink.put(
       body[URL_NAME],
       JSON.stringify({
@@ -304,7 +305,7 @@ if (pathname.startsWith(API_PATH)) {
         value: body[URL_KEY],
         expiresAt: expiresAt ? expiresAt.toISOString() : null,
         burn_after_reading: body["burn_after_reading"], 
-      })
+      }),{expiration:Math.round(expiresAt.getTime() / 1000)}
     );
      // Remove other fields from the response body
     const responseBody = {
