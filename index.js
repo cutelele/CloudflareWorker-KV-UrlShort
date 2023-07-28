@@ -10,7 +10,7 @@ const URL_NAME = "shortCode";
 const SHORT_URL_KEY = "shorturl";
 // 静态首页源码链接 （设置首页替换页面，不需要也可以直接注释掉）
 const STATICHTML = "https://raw.githubusercontent.com/Aiayw/CloudflareWorkerKV-UrlShort/main/404.html";
-
+const VIP_CODE = 9981;
 
 const index = `<!doctype html>
 <html lang="zh-CN">
@@ -149,9 +149,10 @@ const index = `<!doctype html>
             <div id="text_div">
                 <textarea id="link" placeholder="输入链接/文本/HTML源代码" class="form-control" rows="10"></textarea><br>
             </div>
-            <p class="lead">
+            <div class="input-group mb-2">
+                <input type="text" id="vip_code" placeholder="VIP CODE" class="input-group-text">
                 <a href="#" onclick="getlink()" class="btn btn-lg btn-secondary fw-bold border-white bg-white">生成</a>
-            </p>
+            </div>
         </main>
 
     </div>
@@ -205,6 +206,7 @@ const index = `<!doctype html>
         function getlink() {
             let link = document.getElementById('link').value.trim()
             const name = document.getElementById('name').value
+            const vipCode = document.getElementById('vip_code').value            
             const type = document.getElementById('select').value
             if (link === '') {
                 document.getElementById('result').innerHTML = "请输入链接/文本/HTML源代码"
@@ -226,6 +228,7 @@ const index = `<!doctype html>
                 "${URL_KEY}": link,
                 "${URL_NAME}": name,
                 "type": type,
+                "vipCode":vipCode,
                 "expiration": burnAfterReading ? -1 : expiration,
                 "burn_after_reading": burnAfterReading
               }).then(resp => {
@@ -275,6 +278,23 @@ if (pathname.startsWith(API_PATH)) {
     var short_type = "link";
     if (body["type"] != undefined && body["type"] != "") {
       short_type = body["type"];
+    }
+    if(!body["burn_after_reading"]&&body["expiration"]==-1){
+      if(body["vipCode"]==undefined||body["vipCode"]==""){
+        return new Response(
+          JSON.stringify({ error: "无限制需要提供VipCode!" }),
+          {
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+          }
+        );
+      }else if(body["vipCode"]!=VIP_CODE){
+        return new Response(
+          JSON.stringify({ error: "VipCode错误！" }),
+          {
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+          }
+        );
+      }
     }
     if (
       body[URL_NAME] == undefined ||
