@@ -275,7 +275,7 @@ async function handleRequest(request) {
 if (pathname.startsWith(API_PATH)) {
     const body = JSON.parse(await request.text());
     console.log(body);
-    var short_type = "link";
+    let short_type = "link";
     if (body["type"] != undefined && body["type"] != "") {
       short_type = body["type"];
     }
