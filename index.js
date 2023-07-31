@@ -23,7 +23,7 @@ const index = `<!doctype html>
     <script async src="https://umami.aiayw.com/script.js" data-website-id="1b4b644e-8552-452e-8c58-f6efb03ba42b"></script>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
-    <title>简短分享 - 长网址缩短，文本分享，Html单页分享</title>
+    <title>微查短链 - 长网址缩短，文本分享，Html单页分享</title>
 </head>
 
 <style>
@@ -116,7 +116,7 @@ const index = `<!doctype html>
                                 d="M512 21.333333a490.666667 490.666667 0 1 0 490.666667 490.666667A490.666667 490.666667 0 0 0 512 21.333333z m316.8 354.986667l-181.12 181.12a32 32 0 0 1-45.226667 0L557.226667 512 512 557.226667l45.226667 45.226666a32 32 0 0 1 0 45.226667l-181.12 181.12a32 32 0 0 1-45.226667 0l-135.68-135.68a32 32 0 0 1 0-45.226667l181.12-181.12a32 32 0 0 1 45.226667 0L466.773333 512 512 466.773333l-45.226667-45.226666a32 32 0 0 1 0-45.226667l181.12-181.12a32 32 0 0 1 45.226667 0l135.68 135.68a32 32 0 0 1 0 45.226667z"
                                 fill="#666666" p-id="1960"></path>
                         </svg>
-                        简短分享
+                        微查短链
                     </a>
                 </div>
             </nav>
@@ -142,6 +142,7 @@ const index = `<!doctype html>
                         <option value="1440">1天</option>
                         <option value="10080">7天</option>
                         <option value="43200">1个月</option>
+                        <option value="129600">3个月</option>                        
                     </select>
                     <input type="text" id="name" placeholder="自定义后缀" class="input-group-text">
                 </div>
@@ -272,7 +273,7 @@ async function handleRequest(request) {
     });
   }
   // short api
-if (pathname.startsWith(API_PATH)) {
+if (pathname.startsWith(API_PATH)&&request.method==='POST') {
     const body = JSON.parse(await request.text());
     console.log(body);
     let short_type = "link";
@@ -305,6 +306,7 @@ if (pathname.startsWith(API_PATH)) {
     }
     
     // 检查自定义后缀是否已经存在
+    // @ts-ignore
     if (await shortlink.get(body[URL_NAME])) {
       return new Response(
         JSON.stringify({ error: "该后缀已经被使用，请使用其他后缀。" }),
@@ -318,6 +320,7 @@ if (pathname.startsWith(API_PATH)) {
     const now = new Date();
     const thisTime = now.getTime();
     let expiresAt = expiration===-1?new Date(thisTime + (5259600 * 60 * 1000)):new Date(thisTime + (expiration * 60 * 1000));
+    // @ts-ignore
     await shortlink.put(
       body[URL_NAME],
       JSON.stringify({
@@ -344,6 +347,7 @@ if (pathname.startsWith(API_PATH)) {
   }
   
   const key = pathname.replace("/", "");
+  // @ts-ignore
   if (key !== "" && !(await shortlink.get(key))) {
     return Response.redirect(`${protocol}//${hostname}${ADMIN_PATH}`, 302);
   }
@@ -355,6 +359,7 @@ if (pathname.startsWith(API_PATH)) {
       },
     });
   }
+  // @ts-ignore
   let link = await shortlink.get(key);
   if (link != null) {
     link = JSON.parse(link);
@@ -368,6 +373,7 @@ if (pathname.startsWith(API_PATH)) {
     }
     // 删除阅后即焚的链接
     if (link["burn_after_reading"]) {
+      // @ts-ignore
       await shortlink.delete(key);
     }
     // redirect
@@ -380,7 +386,7 @@ if (pathname.startsWith(API_PATH)) {
       });
     } else {
       // textarea
-      return new Response(`${link["value"]}`, {
+      return new Response(link["value"], {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     }
